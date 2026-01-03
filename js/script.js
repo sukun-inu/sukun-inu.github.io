@@ -1,7 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Helper shortcuts
   const qs = (sel, root = document) => root.querySelector(sel);
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Embedded Octin font (base64 split to keep line length manageable)
   const fontSegments = [
   "BYWAgFgWBQVAOFARB4TA4EgIBwRAJCAAAQAACgQAAQcByRADAMAAAAgAAQAABAAAAEAAAAACA4mcltWAAAAABAw//DAAAAABAgAAuRXYsFAAsAgHAoAAAAQAAQJAAAAibDAAWcOauAXZyBnnGAAAEtMAAgfS31Bdz9GcLfAAAg3wAAQE4tkfl1WYuBCAAAAWDDAALoggCAHeh1GqCAAAwCMAAMyQqSSYj9GbSADAAwJkAAAIDEEAuJXZrpUBAAAULCAAZNzwCiHdthGJAAAAssIAAcEB2dQYlhGa2AAAAQviAAgLvdp+kFWZo5ydAAAxTAAABmvA6aWesdGCAAAAkHNAAABAAAAczF2ZrlAAAwh0AAQouAURtdGcm5CAAAA7RDAAcuAJGACd2NmVEAAAs9AAAQitUzPch12YgBAAAwwDAAADLB4Yy8yUPBHAAAAnOAAA3+thZLUVTdkfNAAAcEAAAIQUTCwUPB1RQAABAAQARAAAAEAA",
   "r/PEAEAAG/PEAEAAr/PEAEAAc/PEAEAAc/PEAEAAr/PEAEAAw+PEAEAAj/PEAEAAr/PEAEAAj/PEAEAAr/PEAEAAr/PEAEAAo+fFAE//TAgAAs+/QAQAAs+/QAQAAA7/YAwv/bBA/+fFAs9/TAg0/LBAFAw6/DBABAAYEoFBURgTEgEBCRAPEYDBwQgKEQCBeQAGEIBBMQgBEAAB6PA9D4+AoPg4Dw9AWPA0Do8AEPgvDg7AyOArDY6AgOgmDQ5AOOAiDI4A8NgdDA3AqNAZD41AYNgUDw0AGNAQDozA0MgLDgyAiMAHDYxAQMgCDQwA+LA+CIvAsLg5CAuAaLA1C4sAILgwCwrA2KAsCoqAkKgnCgpASKAjCYoAAKgeCQnAuJAaCImAcJgVCAlAKJARC4jA4IgMCwiAmIAICohAUIgDCggACIA/BYfAwHg6BQeAeHA2BIdAMHgxBAcA6GAtB4aAoGgoBwZAWGAkBoYAEGgfBgXAyFAb",
@@ -182,11 +185,16 @@ document.addEventListener("DOMContentLoaded", () => {
     runInitialScramble();
   };
 
+  // Scroll reveal effect
   const initReveal = () => {
     const targets = [
       ...qsa("header, main, footer section, .hero-content, .service-item, .contact-link, .cta")
     ];
     if (!targets.length) return () => {};
+    if (prefersReducedMotion) {
+      targets.forEach((el) => el.classList.add("reveal", "in-view"));
+      return () => {};
+    }
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -212,7 +220,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
+  // Scramble animation for headings / labels
   const initScramble = () => {
+    if (prefersReducedMotion) return () => {};
     const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*";
     const scramblers = qsa("[data-scramble]").map((el) => {
       const original = el.textContent;
@@ -229,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const scramble = () => {
         if (animating) return;
         let frame = 0;
-        const max = Math.max(26, Math.ceil(original.length * 3.4));
+        const max = Math.max(18, Math.ceil(original.length * 2.2));
         animating = true;
         clearTimeout(resetTimer);
 
@@ -261,11 +271,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return () => {
       if (seeded) return;
       seeded = true;
-      scramblers.forEach((fn, idx) => setTimeout(fn, idx * 95));
+      scramblers.forEach((fn, idx) => setTimeout(fn, idx * 130));
     };
   };
 
-  const initLoader = () => {
+  // Loading overlay + tile reveal
+  const initLoader = (opts = {}) => {
+    const { reducedMotion = false } = opts;
     const screen = qs(".loading-screen");
     const logBox = qs(".loading-log");
     const progressBox = qs(".loading-progress");
@@ -302,15 +314,21 @@ document.addEventListener("DOMContentLoaded", () => {
       revealed = true;
 
       const runAndFade = (duration) => {
-        setTimeout(markReady, 320);
+        setTimeout(markReady, reducedMotion ? 120 : 320);
         setTimeout(() => screen.remove(), duration);
       };
+
+      if (reducedMotion) {
+        screen.classList.add("tile-reveal");
+        runAndFade(400);
+        return;
+      }
 
       if (tilesBox && !tileRunning) {
         tileRunning = true;
         tilesBox.innerHTML = "";
-        const rows = Math.max(10, Math.floor(window.innerHeight / 18));
-        const cols = Math.max(16, Math.floor(window.innerWidth / 26));
+        const rows = Math.min(18, Math.max(8, Math.floor(window.innerHeight / 40)));
+        const cols = Math.min(24, Math.max(12, Math.floor(window.innerWidth / 48)));
         let longest = 0;
 
         for (let r = 0; r < rows; r += 1) {
@@ -322,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const rowDelay = (r / rows) * 0.9;
             const colDelay = (c / cols) * 0.35;
             const delay = rowDelay + colDelay + Math.random() * 0.08;
-            const duration = 0.65 + Math.random() * 0.55;
+            const duration = 0.45 + Math.random() * 0.45;
             cell.style.setProperty("--d", `${duration}s`);
             cell.style.setProperty("--delay", `${delay}s`);
             row.appendChild(cell);
@@ -332,10 +350,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         screen.classList.add("tile-reveal");
-        runAndFade((longest + 0.65) * 1000);
+        runAndFade((longest + 0.35) * 1000);
       } else {
         screen.classList.add("tile-reveal");
-        runAndFade(1400);
+        runAndFade(1000);
       }
     };
 
@@ -373,11 +391,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
-  injectFontFace();
+  // Defer font injection to idle time
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(injectFontFace, { timeout: 1000 });
+  } else {
+    setTimeout(injectFontFace, 120);
+  }
   initReveal();
   runInitialScramble = initScramble();
-  const loader = initLoader();
+  const loader = initLoader({ reducedMotion: prefersReducedMotion });
 
-  loader.start();
-  window.addEventListener("load", loader.force);
+  if (prefersReducedMotion) {
+    loader.force();
+  } else {
+    loader.start();
+    window.addEventListener("load", loader.force);
+  }
 });

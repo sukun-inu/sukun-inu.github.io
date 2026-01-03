@@ -48,6 +48,7 @@
 </head>
 <body>
 
+  <!-- Loading overlay shown until main UI is ready -->
   <div class="loading-screen" aria-live="polite">
     <div class="loading-console">
       <div class="loading-header">SYCS Loader // Console</div>
@@ -57,13 +58,15 @@
     <div class="loading-tiles" aria-hidden="true"></div>
   </div>
 
+  <!-- Fixed navigation -->
   <header class="navbar">
     <div class="logo"><img src="img/sycs.png" alt="SYCS"></div>
   </header>
 
   <main>
+    <!-- Hero: background video + CTA -->
     <section class="hero">
-      <video class="hero-video" autoplay muted loop playsinline>
+      <video class="hero-video" autoplay muted loop playsinline preload="metadata">
         <source src="/img/back.mp4" type="video/mp4">
       </video>
       <div class="hero-content">
@@ -73,6 +76,7 @@
       </div>
     </section>
 
+    <!-- Services summary -->
     <section id="services" class="services">
       <h2 lang="en" data-scramble>Services</h2>
       <div class="service-list">
@@ -95,6 +99,7 @@
       </div>
     </section>
 
+    <!-- About block -->
     <section id="about" class="about">
       <h2 lang="en" data-scramble>About</h2>
       <p>SYCSは、ITとメディアを横断するハイブリッドクリエイターです。ネットワーク構築、配信サポート、映像制作、グラフィックデザインなど、幅広い分野で活動しています。</p>
@@ -110,6 +115,7 @@
       </div>
     </section>
 
+    <!-- Contact links -->
     <section id="contact" class="contact">
       <h2 lang="en" data-scramble>Contact</h2>
       <p>ご相談や依頼については、お気軽にご連絡ください。</p>
@@ -138,6 +144,7 @@
     </section>
   </main>
 
+  <!-- Footer / payment note -->
   <footer class="footer">
     <div class="footer-icons" aria-label="Payment methods">
       <img src="/img/square.png" alt="VISA">
