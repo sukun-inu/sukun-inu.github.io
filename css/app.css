@@ -1,14 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap");
 
-@font-face {
-  font-family: "Octin College";
-  src: url("OctionCollegeRg-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0020-007E; /* ASCII: A-Z, a-z, digits, punctuation */
-}
-
 :root {
   --bg: #0d0d0d;
   --text: #e6e6e6;
@@ -22,6 +13,10 @@
 /* ===== Base ===== */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { width: 100%; min-height: 100%; margin: 0; padding: 0; overflow-x: hidden; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 body {
   font-family: "Octin College", "Noto Sans", "Noto Sans JP", -apple-system, system-ui, "SF Pro Text", "SF Pro Display", sans-serif;
   background: var(--bg);
@@ -34,8 +29,40 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+body:not(.page-ready) header,
+body:not(.page-ready) main,
+body:not(.page-ready) footer {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(9px);
+}
+body.page-ready header,
+body.page-ready main,
+body.page-ready footer {
+  opacity: 1;
+  transform: translateY(0);
+  filter: none;
+  transition: opacity 0.65s ease, transform 0.65s ease, filter 0.65s ease;
+}
 img, video { display: block; max-width: 100%; }
 a { color: var(--accent); text-decoration: none; }
+
+/* ===== Scroll Reveal ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(10px);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+  filter: none;
+  transition:
+    opacity 0.72s ease,
+    transform 0.72s ease,
+    filter 0.72s ease;
+  transition-delay: var(--reveal-delay, 0s);
+}
 
 /* 英語テキストを Octin College + 大文字化 */
 :lang(en) {
@@ -214,7 +241,10 @@ p { margin: 0 0 16px 0; font-size: 15px; letter-spacing: 0.004em; line-height: 1
   z-index: 999;
   display: grid;
   place-items: center;
-  background: #000;
+  background:
+    radial-gradient(120% 100% at 20% 20%, rgba(255,255,255,0.08), transparent 42%),
+    radial-gradient(120% 100% at 78% 16%, rgba(255,255,255,0.07), transparent 46%),
+    #000;
   color: #f5f5f5;
   font-family: "Octin College", "Noto Sans", "Noto Sans JP", monospace;
 }
@@ -225,6 +255,7 @@ p { margin: 0 0 16px 0; font-size: 15px; letter-spacing: 0.004em; line-height: 1
   border-radius: 0;
   padding: 0 16px;
   box-shadow: none;
+  transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
 }
 .loading-header {
   font-size: 14px;
@@ -259,6 +290,9 @@ p { margin: 0 0 16px 0; font-size: 15px; letter-spacing: 0.004em; line-height: 1
   gap: 3px;
   padding: 10px 6px;
   pointer-events: none;
+  z-index: 3;
+  mask-image: radial-gradient(135% 110% at 50% 46%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: radial-gradient(135% 110% at 50% 46%, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
 }
 .loading-tile-row {
   flex: 1;
@@ -271,28 +305,37 @@ p { margin: 0 0 16px 0; font-size: 15px; letter-spacing: 0.004em; line-height: 1
   flex: 1;
   min-height: 8px;
   background:
-    linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.52) 60%, rgba(255,255,255,0.18) 100%),
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 4px);
-  box-shadow: 0 0 10px rgba(255,255,255,0.32);
+    linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.05) 100%);
+  box-shadow: 0 0 14px rgba(255,255,255,0.38);
+  border-radius: 3px;
   opacity: 0;
-  transform: scaleX(0.6);
+  transform: translateY(6px) scaleX(0.6);
   transform-origin: left center;
-  animation: tileOn var(--d, 0.4s) ease-out forwards var(--delay, 0s);
+  animation: tileOn var(--d, 0.4s) cubic-bezier(0.32, 0.86, 0.38, 0.98) forwards var(--delay, 0s);
 }
 @keyframes tileOn {
-  0% { opacity: 0; transform: scaleX(0.4); }
-  30% { opacity: 1; transform: scaleX(1.05); }
-  100% { opacity: 0.14; transform: scaleX(1); }
+  0% { opacity: 0; transform: translateY(6px) scaleX(0.5); }
+  32% { opacity: 1; transform: translateY(0) scaleX(1.03); }
+  76% { opacity: 0.8; transform: translateY(-1px) scaleX(1); }
+  100% { opacity: 0; transform: translateY(-4px) scaleX(1); }
 }
 .loading-screen.tile-reveal {
-  animation: overlayFade 1.05s ease forwards;
+  animation: overlayFade 1.25s ease forwards;
 }
 @keyframes overlayFade {
   0% { opacity: 1; }
-  18% { opacity: 0.78; }
-  32% { opacity: 0.95; }
-  70% { opacity: 0.42; }
+  24% { opacity: 0.86; }
+  40% { opacity: 0.96; }
+  72% { opacity: 0.4; }
   100% { opacity: 0; }
+}
+.loading-screen.tile-reveal .loading-console {
+  opacity: 0;
+  transform: translateY(-10px);
+  filter: blur(6px);
+}
+.loading-screen.tile-reveal .loading-tiles {
+  filter: blur(0.6px) saturate(1.05);
 }
 .loading-screen.is-hidden {
   opacity: 0;
